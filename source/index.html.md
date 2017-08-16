@@ -14,6 +14,8 @@ includes:
   - product_groups
   - product_availabilities
   - payment_methods
+  - payments
+  - orders
 
 search: true
 ---
