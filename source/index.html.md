@@ -2,238 +2,97 @@
 title: API Reference
 
 language_tabs: # must be one of https://git.io/vQNgJ
-  - shell
-  - ruby
-  - python
-  - javascript
+  - http
 
-toc_footers:
-  - <a href='#'>Sign Up for a Developer Key</a>
-  - <a href='https://github.com/tripit/slate'>Documentation Powered by Slate</a>
+# toc_footers:
+#   - <a href='#'>Sign Up for a Developer Key</a>
+#   - <a href='https://github.com/tripit/slate'>Documentation Powered by Slate</a>
 
 includes:
-  - errors
+  - events
+  - products
+  - product_groups
+  - product_availabilities
+  - payment_methods
 
 search: true
 ---
 
 # Introduction
 
-Welcome to the Kittn API! You can use our API to access Kittn API endpoints, which can get information on various cats, kittens, and breeds in our database.
+Tickets API is a RESTful web service for developers to programmatically interact with Events, Products, Tickets sales data etc.
 
-We have language bindings in Shell, Ruby, and Python! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+The Tickets API is organized around REST. Every bit of data exchanged between clients and the API is JSON over HTTPS. All API requests must be made over HTTPS. Calls made over plain HTTP will fail. You must authenticate for all requests.
 
-This example API documentation page was created with [Slate](https://github.com/tripit/slate). Feel free to edit it and use it as a base for your own API's documentation.
+The base URL for the Tickets API is [https://tickets.namespace.ee/api/](https://tickets.namespace.ee/api/).
 
-# Authentication
+* The API is a RESTful webservice running over HTTPS connections
+* Each client authenticates with the service using a token in the Authorization header
+* All request and response contents are encoded in JSON
+* Clients must send "application/json" in the Accept and Content-Type headers
+* All datetime values are encoded in timezone-aware ISO8601
+* The service uses HTTP response codes to communicate the successes and failures
+* Any incoming request is subject to validation and in case of errors a HTTP 400 Bad Request
+  will be sent together with detailed failure message in the response body.
+* List requests are subject to pagination. A hyperlink to the next page is provided
+  in the Link header together with the rel="next" attribute.
+* A client must respect the HTTP 429 Too Many Requests status code in overload conditions.
 
-> To authorize, use this code:
+If you have questions about using the API, or have come across a bug you’d like to report, write us an email at [tickets@namespace.ee](tickets@namespace.ee).
 
-```ruby
-require 'kittn'
+## Authentication
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-```
+For clients to authenticate, the token key should be included in the Authorization HTTP header.
 
-```python
-import kittn
+The key should be prefixed by the string literal "Token", with whitespace separating the two strings.
 
-api = kittn.authorize('meowmeowmeow')
-```
-
-```shell
-# With shell, you can just pass the correct header with each request
-curl "api_endpoint_here"
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-```
-
-> Make sure to replace `meowmeowmeow` with your API key.
-
-Kittn uses API keys to allow access to the API. You can register a new Kittn API key at our [developer portal](http://example.com/developers).
-
-Kittn expects for the API key to be included in all API requests to the server in a header that looks like the following:
-
-`Authorization: meowmeowmeow`
+`Authorization: Token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b`
 
 <aside class="notice">
-You must replace <code>meowmeowmeow</code> with your personal API key.
+You must replace <code>9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b</code> with your personal API key.
 </aside>
 
-# Kittens
+Unauthenticated responses that are denied permission will result in an HTTP 401 Unauthorized response with an appropriate WWW-Authenticate header.
 
-## Get All Kittens
+`WWW-Authenticate: Token`
 
-```ruby
-require 'kittn'
+## Obtaining authentication tokens
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get
-```
+To obtain a authentication token the fallowing HTTP request has to be performed.
 
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get()
-```
-
-```shell
-curl "http://example.com/api/kittens"
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let kittens = api.kittens.get();
-```
-
-> The above command returns JSON structured like this:
+> The request returns JSON structured like this:
 
 ```json
-[
-  {
-    "id": 1,
-    "name": "Fluffums",
-    "breed": "calico",
-    "fluffiness": 6,
-    "cuteness": 7
-  },
-  {
-    "id": 2,
-    "name": "Max",
-    "breed": "unknown",
-    "fluffiness": 5,
-    "cuteness": 10
-  }
-]
+{
+  "token": "7e9917ffg57b043b9527711395c013761b2113c7"
+}
 ```
-
-This endpoint retrieves all kittens.
 
 ### HTTP Request
 
-`GET http://example.com/api/kittens`
+`POST https://gsmtasks.com/api/authenticate/`
 
 ### Query Parameters
 
-Parameter | Default | Description
---------- | ------- | -----------
-include_cats | false | If set to true, the result will also include cats.
-available | true | If set to false, the result will include kittens that have already been adopted.
+Parameter | Type   | Required | Description
+--------- | ------ | -------  | -----------
+username  | String | yes      | The email used during signup
+password  | String | yes      | The password set for that username
 
 <aside class="success">
-Remember — a happy kitten is an authenticated kitten!
+The tokens are valid forever, unless refreshed by the user himself.
 </aside>
 
-## Get a Specific Kitten
+## Response Status codes and errors
 
-```ruby
-require 'kittn'
+Tickets API uses conventional HTTP response codes to indicate success or failure of an API request. In general, codes in the 2xx range indicate success, codes in the 4xx range indicate an error that resulted from the provided information (e.g. a required parameter was missing, a charge failed, etc.), and codes in the 5xx range indicate an error with Tickets API servers.
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get(2)
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get(2)
-```
-
-```shell
-curl "http://example.com/api/kittens/2"
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.get(2);
-```
-
-> The above command returns JSON structured like this:
-
-```json
-{
-  "id": 2,
-  "name": "Max",
-  "breed": "unknown",
-  "fluffiness": 5,
-  "cuteness": 10
-}
-```
-
-This endpoint retrieves a specific kitten.
-
-<aside class="warning">Inside HTML code blocks like this one, you can't use Markdown, so use <code>&lt;code&gt;</code> blocks to denote code.</aside>
-
-### HTTP Request
-
-`GET http://example.com/kittens/<ID>`
-
-### URL Parameters
-
-Parameter | Description
---------- | -----------
-ID | The ID of the kitten to retrieve
-
-## Delete a Specific Kitten
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.delete(2)
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.delete(2)
-```
-
-```shell
-curl "http://example.com/api/kittens/2"
-  -X DELETE
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.delete(2);
-```
-
-> The above command returns JSON structured like this:
-
-```json
-{
-  "id": 2,
-  "deleted" : ":("
-}
-```
-
-This endpoint retrieves a specific kitten.
-
-### HTTP Request
-
-`DELETE http://example.com/kittens/<ID>`
-
-### URL Parameters
-
-Parameter | Description
---------- | -----------
-ID | The ID of the kitten to delete
-
+Status code | Status text       | Description
+----------- | ----------------- | -----------
+200         | OK                | Everything worked as expected.
+400         | Bad Request       | Often missing a required parameter.
+401         | Unauthorized      | No valid API key provided.
+402         | Request Failed    | Parameters were valid but request failed.
+404         | Not Found         | The requested item doesn't exist.
+429         | Too Many Requests | Too many requests hit the API too quickly.
+50*         | Server Errors     | Something went wrong on our end.
