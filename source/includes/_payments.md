@@ -86,7 +86,7 @@ This endpoint retrieves a specific payment method.
 
 ### HTTP Request
 
-`POST https://tickets.namespace.ee/api/payments/<UUID>`
+`POST https://tickets.namespace.ee/api/payments/`
 
 ### JSON Parameters
 
